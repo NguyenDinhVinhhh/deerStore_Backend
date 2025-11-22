@@ -1,52 +1,52 @@
 package com.example.quanlycuahang.controller.KhachHang;
 
-import com.example.quanlycuahang.dto.KhachHangRequest;
+import com.example.quanlycuahang.dto.KhachHang.KhachHangResponse;
 import com.example.quanlycuahang.entity.KhachHang.KhachHang;
-
 import com.example.quanlycuahang.service.KhachHang.KhachHangService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.math.BigDecimal;
 import java.util.List;
 
-
 @RestController
-@RequestMapping("/api/khachhang")
+@RequestMapping("/api/khach-hang")
 @CrossOrigin("*")
 public class KhachHangController {
 
     @Autowired
     private KhachHangService khachHangService;
 
-    @GetMapping
-    public ResponseEntity<List<KhachHang>> getAll() {
-        return ResponseEntity.ok(khachHangService.getAll());
+   //api tìm kiếm khách hàng theo tên hoặc sdt
+    @GetMapping("/tim-kiem")
+    public ResponseEntity<List<KhachHangResponse>> searchCustomers(@RequestParam String keyword) {
+        List<KhachHangResponse> customers = khachHangService.searchCustomers(keyword);
+        return ResponseEntity.ok(customers);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<KhachHang> getOne(@PathVariable Integer id) {
-        KhachHang kh = khachHangService.getById(id);
-        if (kh == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(kh);
-    }
-
+    //api tạo mới 1 khách hàng
     @PostMapping
-    public ResponseEntity<KhachHang> create(@RequestBody KhachHangRequest req) {
-        KhachHang created = khachHangService.create(req);
-        return ResponseEntity.status(201).body(created);
+    public ResponseEntity<KhachHang> createCustomer(@RequestBody KhachHang khachHang) {
+        try {
+            KhachHang createdCustomer = khachHangService.createCustomer(khachHang);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdCustomer);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<KhachHang> update(@PathVariable Integer id, @RequestBody KhachHangRequest req) {
-        KhachHang updated = khachHangService.update(id, req);
-        if (updated == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(updated);
+
+    @GetMapping("/{ma_kh}/thong-tin-giam-gia")
+    public ResponseEntity<BigDecimal> getCustomerDiscountPercent(@PathVariable Integer ma_kh) {
+        BigDecimal discount = khachHangService.getCustomerDiscountPercent(ma_kh);
+        return ResponseEntity.ok(discount);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        khachHangService.delete(id);
-        return ResponseEntity.noContent().build();
+    //api lấy danh sách tất cả khách hàng
+    @GetMapping
+    public ResponseEntity<List<KhachHangResponse>> getAllKhachHang() {
+        List<KhachHangResponse> danhSach = khachHangService.getAllKhachHang();
+        return ResponseEntity.ok(danhSach);
     }
 }

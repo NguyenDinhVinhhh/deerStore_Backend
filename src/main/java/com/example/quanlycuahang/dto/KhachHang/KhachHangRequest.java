@@ -1,9 +1,8 @@
-package com.example.quanlycuahang.dto;
+package com.example.quanlycuahang.dto.KhachHang;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 public class KhachHangRequest {
     private String hoTen;

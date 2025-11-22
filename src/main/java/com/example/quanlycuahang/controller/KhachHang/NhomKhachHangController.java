@@ -3,46 +3,49 @@ package com.example.quanlycuahang.controller.KhachHang;
 import com.example.quanlycuahang.entity.KhachHang.NhomKhachHang;
 import com.example.quanlycuahang.service.KhachHang.NhomKhachHangService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/nhomkhachhang")
-@CrossOrigin("*")
+@RequestMapping("/api/nhom-khach-hang")
 public class NhomKhachHangController {
 
     @Autowired
     private NhomKhachHangService nhomKhachHangService;
 
+    //api lấy danh sách hạng thành viên
     @GetMapping
-    public List<NhomKhachHang> getAll() {
-        return nhomKhachHangService.getAll();
+    public ResponseEntity<List<NhomKhachHang>> getAllNhomKhachHang() {
+        List<NhomKhachHang> nhomList = nhomKhachHangService.getAllNhomKhachHang();
+        return ResponseEntity.ok(nhomList);
     }
 
-    // Get by id
-    @GetMapping("/{id}")
-    public ResponseEntity<NhomKhachHang> getById(@PathVariable Integer id) {
-        NhomKhachHang nhom = nhomKhachHangService.getById(id);
-        if (nhom == null) {
-            return ResponseEntity.notFound().build();
+    //api cập nhật quy tắc 1 hạng
+    @PutMapping("/{ma_nhom}")
+    public ResponseEntity<NhomKhachHang> updateNhomKhachHang(@PathVariable Integer ma_nhom, @RequestBody NhomKhachHang nhomKhachHang) {
+        try {
+            NhomKhachHang updatedNhom = nhomKhachHangService.updateNhomKhachHang(ma_nhom, nhomKhachHang);
+            return ResponseEntity.ok(updatedNhom);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(nhom);
     }
 
+    //api lấy chi tiết 1 hang
+    @GetMapping("/{ma_nhom}")
+    public ResponseEntity<NhomKhachHang> getNhomKhachHangById(@PathVariable Integer ma_nhom) {
+        return nhomKhachHangService.getNhomKhachHangById(ma_nhom)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+   //api thêm mới 1 hạng thành viên
     @PostMapping
-    public NhomKhachHang create(@RequestBody NhomKhachHang nhom) {
-        return nhomKhachHangService.save(nhom);
-    }
-
-    @PutMapping("/{id}")
-    public NhomKhachHang update(@PathVariable int id, @RequestBody NhomKhachHang nhom) {
-        return nhomKhachHangService.update(id, nhom);
-    }
-
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable int id) {
-        nhomKhachHangService.delete(id);
+    public ResponseEntity<NhomKhachHang> createNhomKhachHang(@RequestBody NhomKhachHang nhomKhachHang) {
+        NhomKhachHang createdNhom = nhomKhachHangService.createNhomKhachHang(nhomKhachHang);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdNhom);
     }
 }
