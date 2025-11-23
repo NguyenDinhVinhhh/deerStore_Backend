@@ -4,8 +4,10 @@ package com.example.quanlycuahang.service.SanPham;
 import com.example.quanlycuahang.dto.SanPham.SanPhamResponse;
 import com.example.quanlycuahang.entity.DanhMuc.DanhMuc;
 import com.example.quanlycuahang.entity.SanPham.SanPham;
+import com.example.quanlycuahang.entity.TonKho.TonKho;
 import com.example.quanlycuahang.repository.DanhMuc.DanhMucRepository;
 import com.example.quanlycuahang.repository.SanPham.SanPhamRepository;
+import com.example.quanlycuahang.service.TonKho.TonKhoService;
 import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,9 @@ public class SanPhamService {
     private DanhMucRepository danhMucRepository;
 
     @Autowired
+    private TonKhoService tonKhoService;
+
+    @Autowired
     private FileUploadService fileUploadService;
 
     @Value("${app.image-base-url}")
@@ -49,6 +54,8 @@ public class SanPhamService {
 
     private SanPhamResponse mapToResponse(SanPham sanPham) {
         DanhMuc danhMuc = sanPham.getDanhMuc();
+        Integer maSp = sanPham.getMaSp();
+        Integer tonKhoDetails = tonKhoService.getTotalStockByProduct(maSp);
         return SanPhamResponse.builder()
                 .maSp(sanPham.getMaSp())
                 .maSku(sanPham.getMaSku())
@@ -60,6 +67,7 @@ public class SanPhamService {
                 .maDanhMuc(sanPham.getMaDanhMuc())
                 .tenDanhMuc(danhMuc != null ? danhMuc.getTenDanhMuc() : "Không xác định")
                 .trangThai(sanPham.getTrangThai())
+                .tonKhoTong(tonKhoDetails)
                 .build();
     }
 

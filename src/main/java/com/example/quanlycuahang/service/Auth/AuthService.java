@@ -8,9 +8,11 @@ import com.example.quanlycuahang.dto.ChiNhanh.ChiNhanhDto;
 import com.example.quanlycuahang.entity.ChiNhanh.ChiNhanh;
 import com.example.quanlycuahang.entity.ChiNhanh.TaiKhoanChiNhanh;
 import com.example.quanlycuahang.entity.TaiKhoan.TaiKhoan;
+import com.example.quanlycuahang.entity.VaiTro.VaiTro;
 import com.example.quanlycuahang.repository.ChiNhanh.ChiNhanhRepository;
 import com.example.quanlycuahang.repository.ChiNhanh.TaiKhoanChiNhanhRepository;
 import com.example.quanlycuahang.repository.TaiKhoan.TaiKhoanRepository;
+import com.example.quanlycuahang.repository.VaiTro.VaiTroRepository;
 import com.example.quanlycuahang.service.ChiNhanh.BranchService;
 import com.example.quanlycuahang.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,8 @@ public class AuthService {
     @Autowired
     private ChiNhanhRepository chiNhanhRepository;
 
+    @Autowired
+    private VaiTroRepository vaiTroRepository;
 
     @Autowired
     private TaiKhoanChiNhanhRepository taiKhoanChiNhanhRepository;
@@ -133,8 +137,10 @@ public class AuthService {
                 .map(tk -> {
                     // Lấy danh sách chi nhánh của tài khoản
                     List<ChiNhanhDto> branches = branchService.getBranchesByMaTk(tk.getMaTk());
-
-                    // Tạo DTO với chi nhánh
+                    Optional<VaiTro> vaiTroOpt = vaiTroRepository.findById(tk.getMaVaiTro());
+                    String tenVaiTro = vaiTroOpt
+                            .map(VaiTro::getTenVaiTro)
+                            .orElse("Không xác định");
                     return new TaiKhoanDto(
                             tk.getMaTk(),
                             tk.getTenDangNhap(),
@@ -143,6 +149,7 @@ public class AuthService {
                             tk.getSdt(),
                             tk.getTrangThai(),
                             tk.getMaVaiTro(),
+                            tenVaiTro,
                             tk.getIsSuperAdmin(),
                             branches
                     );
@@ -157,7 +164,10 @@ public class AuthService {
                 .map(tk -> {
 
                     List<ChiNhanhDto> branches = branchService.getBranchesByMaTk(tk.getMaTk());
-
+                    Optional<VaiTro> vaiTroOpt = vaiTroRepository.findById(tk.getMaVaiTro());
+                    String tenVaiTro = vaiTroOpt
+                            .map(VaiTro::getTenVaiTro)
+                            .orElse("Không xác định");
 
                     return new TaiKhoanDto(
                             tk.getMaTk(),
@@ -167,6 +177,7 @@ public class AuthService {
                             tk.getSdt(),
                             tk.getTrangThai(),
                             tk.getMaVaiTro(),
+                            tenVaiTro,
                             tk.getIsSuperAdmin(),
                             branches
                     );

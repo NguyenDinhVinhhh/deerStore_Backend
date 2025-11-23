@@ -19,6 +19,7 @@ public class TaiKhoanDto {
     private String sdt;
     private Boolean trangThai;
     private Integer maVaiTro;
+    private String tenVaiTro;
     private Boolean isSuperAdmin;
     private List<ChiNhanhDto> chiNhanhList;
 }
