@@ -1,5 +1,6 @@
 package com.example.quanlycuahang.entity.KhachHang;
 
+import com.example.quanlycuahang.entity.TaiKhoanKhachHang.TaiKhoanKhachHang;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -43,6 +44,17 @@ public class KhachHang {
     @JsonIgnore
     private NhomKhachHang nhomKhachHang;
 
+
+    @OneToOne(mappedBy = "khachHang", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private TaiKhoanKhachHang taiKhoan;
+
+    public TaiKhoanKhachHang getTaiKhoan() {
+        return taiKhoan;
+    }
+
+    public void setTaiKhoan(TaiKhoanKhachHang taiKhoan) {
+        this.taiKhoan = taiKhoan;
+    }
     // Getters và Setters
     public Integer getMaKh() { return maKh; }
     public void setMaKh(Integer maKh) { this.maKh = maKh; }
