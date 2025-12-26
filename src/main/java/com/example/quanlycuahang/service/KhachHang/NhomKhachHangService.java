@@ -57,4 +57,13 @@ public class NhomKhachHangService {
     public NhomKhachHang createNhomKhachHang(NhomKhachHang nhomKhachHang) {
         return nhomKhachHangRepository.save(nhomKhachHang);
     }
+
+    @Transactional
+    public void deleteNhomKhachHang(Integer maNhom) {
+        if (!nhomKhachHangRepository.existsById(maNhom)) {
+            throw new RuntimeException("Không tìm thấy nhóm khách hàng với mã: " + maNhom);
+        }
+        nhomKhachHangRepository.deleteById(maNhom);
+    }
+
 }

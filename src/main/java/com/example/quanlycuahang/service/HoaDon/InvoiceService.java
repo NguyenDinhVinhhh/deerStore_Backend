@@ -1,10 +1,8 @@
 package com.example.quanlycuahang.service.HoaDon;
 
 import com.example.quanlycuahang.config.MomoConfig;
-import com.example.quanlycuahang.dto.HoaDon.InvoiceHeaderDto;
-import com.example.quanlycuahang.dto.HoaDon.InvoiceItemDto;
-import com.example.quanlycuahang.dto.HoaDon.InvoiceRequest;
-import com.example.quanlycuahang.dto.HoaDon.PaymentDto;
+import com.example.quanlycuahang.dto.HoaDon.*;
+import com.example.quanlycuahang.dto.ThongKe.*;
 import com.example.quanlycuahang.dto.TonKho.InvoiceCalculationResult;
 import com.example.quanlycuahang.entity.HoaDon.ChiTietHoaDon;
 import com.example.quanlycuahang.entity.HoaDon.HoaDon;
@@ -28,6 +26,9 @@ import com.example.quanlycuahang.service.TonKho.TonKhoService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -221,7 +224,7 @@ public class InvoiceService {
         }
 
         // 3. Cập nhật Hóa đơn và Ghi Thanh toán
-        hd.setTrang_thai("Hoàn thành");
+        hd.setTrang_thai("HOAN THANH");
         hd.setTien_khach_tra(hd.getThanh_tien());
         hoaDonRepository.save(hd);
 
@@ -269,6 +272,161 @@ public class InvoiceService {
         // Giao dịch kết thúc thành công.
     }
 
+    public ThongKe_Donhang_Doanhthu_Request thongKeHomNay(Integer maChiNhanh) {
+
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end = LocalDate.now().atTime(23, 59, 59);
+
+        ThongKe_Donhang_Doanhthu_Request res = new ThongKe_Donhang_Doanhthu_Request();
+        res.setMaChiNhanh(maChiNhanh);
+        res.setTongDonHangMoi(
+                hoaDonRepository.countDonHangMoiHomNay(start, end, maChiNhanh)
+        );
+        res.setTongDoanhThu(
+                hoaDonRepository.tongDoanhThuHomNay(start, end, maChiNhanh)
+        );
+        res.setTongDonTraHang(
+                hoaDonRepository.countDonTraHang(start, end, maChiNhanh)
+        );
+        res.setTongDonHuy(
+                hoaDonRepository.countDonHuy(start, end, maChiNhanh)
+        );
 
 
+        return res;
+    }
+
+    private LocalDateTime[] resolveTimeRange(ThoiGianThongKe type) {
+        LocalDate today = LocalDate.now();
+
+        return switch (type) {
+            case HOM_NAY -> new LocalDateTime[]{
+                    today.atStartOfDay(),
+                    today.atTime(23, 59, 59)
+            };
+
+            case HOM_QUA -> new LocalDateTime[]{
+                    today.minusDays(1).atStartOfDay(),
+                    today.minusDays(1).atTime(23, 59, 59)
+            };
+
+            case BAY_NGAY_QUA -> new LocalDateTime[]{
+                    today.minusDays(6).atStartOfDay(),
+                    today.atTime(23, 59, 59)
+            };
+
+            case THANG_NAY -> new LocalDateTime[]{
+                    today.withDayOfMonth(1).atStartOfDay(),
+                    today.atTime(23, 59, 59)
+            };
+
+            case NAM_NAY -> new LocalDateTime[]{
+                    today.withDayOfYear(1).atStartOfDay(),
+                    today.atTime(23, 59, 59)
+            };
+
+            default -> throw new IllegalArgumentException("Không hỗ trợ kiểu thời gian");
+        };
+    }
+    @Transactional(readOnly = true)
+    public BigDecimal getDoanhThuTheoThoiGian(
+            ThoiGianThongKe type,
+            Integer maChiNhanh
+    ) {
+        LocalDateTime[] range = resolveTimeRange(type);
+        return hoaDonRepository.tongDoanhThuHomNay(
+                range[0],
+                range[1],
+                maChiNhanh
+        );
+    }
+
+
+    // hàm biểu đồ doanh thu
+    @Transactional(readOnly = true)
+    public List<BieuDoDoanhThuResponse> getBieuDoDoanhThu(
+            ThongKeDoanhThuRequest request
+    ) {
+        ThoiGianThongKe type = request.getKieuThoiGian();
+        Integer maChiNhanh = request.getMaChiNhanh();
+        LocalDate today = LocalDate.now();
+
+        // 🔹 NĂM → GROUP BY THÁNG
+        if (type == ThoiGianThongKe.NAM_NAY) {
+            List<Object[]> raw = hoaDonRepository.doanhThuTheoThang(
+                    today.getYear(),
+                    maChiNhanh
+            );
+
+            return raw.stream()
+                    .map(r -> new BieuDoDoanhThuResponse(
+                            "Tháng " + r[0],
+                            (BigDecimal) r[1]
+                    ))
+                    .toList();
+        }
+
+        // 🔹 CÒN LẠI → GROUP BY NGÀY
+        LocalDateTime[] range = resolveTimeRange(type);
+
+        List<Object[]> raw = hoaDonRepository.doanhThuTheoNgay(
+                range[0],
+                range[1],
+                maChiNhanh
+        );
+
+        return raw.stream()
+                .map(r -> new BieuDoDoanhThuResponse(
+                        r[0].toString(), // yyyy-MM-dd
+                        (BigDecimal) r[1]
+                ))
+                .toList();
+    }
+
+    public List<DoanhThuChiNhanhDTO> soSanhDoanhThuChiNhanh(ThoiGianThongKe type) {
+
+        LocalDateTime start;
+        LocalDateTime end = LocalDateTime.now();
+
+        switch (type) {
+            case HOM_NAY -> start = LocalDate.now().atStartOfDay();
+
+            case HOM_QUA -> {
+                start = LocalDate.now().minusDays(1).atStartOfDay();
+                end = LocalDate.now().atStartOfDay();
+            }
+
+            case BAY_NGAY_QUA ->
+                    start = LocalDate.now().minusDays(6).atStartOfDay();
+
+            case THANG_NAY ->
+                    start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+
+            case NAM_NAY ->
+                    start = LocalDate.now().withDayOfYear(1).atStartOfDay();
+
+            default ->
+                    throw new IllegalArgumentException("Loại thời gian không hợp lệ");
+        }
+
+        return hoaDonRepository.thongKeDoanhThuTheoChiNhanh(start, end);
+    }
+
+    public Page<HoaDonResponse> getDanhSachHoaDon(
+            Integer maChiNhanh,
+            String trangThai,
+            LocalDateTime start,
+            LocalDateTime end,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return hoaDonRepository.getDanhSachHoaDon(
+                maChiNhanh,
+                trangThai,
+                start,
+                end,
+                pageable
+        );
+    }
 }

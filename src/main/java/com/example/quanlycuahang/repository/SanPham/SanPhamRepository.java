@@ -21,4 +21,9 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Integer> {
 
     // Tìm kiếm sản phẩm theo danh mục
     List<SanPham> findByMaDanhMuc(Integer maDanhMuc);
+
+    List<SanPham> findByTenSpContainingIgnoreCaseOrMaSkuContainingIgnoreCase(
+            String tenSp,
+            String maSku
+    );
 }

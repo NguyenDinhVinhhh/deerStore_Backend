@@ -88,17 +88,28 @@ public class KhachHangService {
     @Transactional
     public KhachHang createCustomer(KhachHang khachHang) {
 
-        if (khachHang.getSdt() != null && khachHangRepository.findBySdt(khachHang.getSdt()).isPresent()) {
-            throw new RuntimeException("Số điện thoại đã tồn tại.");
+        if (khachHang.getHoTen() == null || khachHang.getHoTen().isBlank()) {
+            throw new RuntimeException("Họ tên không được để trống");
         }
-        nhomKhachHangRepository.findById(Khach_hang_moi).ifPresent(khachHang::setNhomKhachHang);
+
+        if (khachHang.getSdt() != null &&
+                khachHangRepository.findBySdt(khachHang.getSdt()).isPresent()) {
+            throw new RuntimeException("Số điện thoại đã tồn tại");
+        }
+
+        nhomKhachHangRepository.findById(Khach_hang_moi)
+                .ifPresent(khachHang::setNhomKhachHang);
+
         khachHang.setNgayDangKy(LocalDate.now());
-        if (khachHang.getTongChiTieuLuyKe() == null) {
-            khachHang.setTongChiTieuLuyKe(BigDecimal.ZERO);
-        }
+        khachHang.setTongChiTieuLuyKe(
+                khachHang.getTongChiTieuLuyKe() == null
+                        ? BigDecimal.ZERO
+                        : khachHang.getTongChiTieuLuyKe()
+        );
 
         return khachHangRepository.save(khachHang);
     }
+
 
     //Hàm này lấy phần trăm chiết khấu của khách hàng theo id
     @Transactional
@@ -223,5 +234,51 @@ public class KhachHangService {
     public Optional<KhachHang> findBySdt(String sdt) {
         return khachHangRepository.findBySdt(sdt);
     }
+
+    @Transactional
+    public KhachHang updateCustomer(Integer maKh, KhachHang updatedData) {
+
+        // 1. Lấy khách hàng hiện tại
+        KhachHang khachHang = khachHangRepository.findById(maKh)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với mã: " + maKh));
+
+        // 2. Cập nhật họ tên
+        if (updatedData.getHoTen() != null && !updatedData.getHoTen().isBlank()) {
+            khachHang.setHoTen(updatedData.getHoTen());
+        }
+
+        // 3. Cập nhật SĐT (phải kiểm tra trùng)
+        if (updatedData.getSdt() != null &&
+                !updatedData.getSdt().equals(khachHang.getSdt())) {
+
+            if (khachHangRepository.findBySdt(updatedData.getSdt()).isPresent()) {
+                throw new RuntimeException("Số điện thoại đã tồn tại");
+            }
+            khachHang.setSdt(updatedData.getSdt());
+        }
+
+        // 4. Cập nhật email
+        if (updatedData.getEmail() != null) {
+            khachHang.setEmail(updatedData.getEmail());
+        }
+
+        // 5. Cập nhật địa chỉ
+        if (updatedData.getDiaChi() != null) {
+            khachHang.setDiaChi(updatedData.getDiaChi());
+        }
+
+        // 6. Cập nhật ghi chú
+        if (updatedData.getGhiChu() != null) {
+            khachHang.setGhiChu(updatedData.getGhiChu());
+        }
+
+        // ❌ Không cho phép cập nhật:
+        // - ngayDangKy
+        // - tongChiTieuLuyKe
+        // - nhomKhachHang
+
+        return khachHangRepository.save(khachHang);
+    }
+
 
 }

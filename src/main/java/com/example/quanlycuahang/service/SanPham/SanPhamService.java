@@ -189,5 +189,24 @@ public class SanPhamService {
         return mapToResponse(sp);
     }
 
+    //hàm tìm kiếm theo tên hoặc sku
+    @Transactional
+    public List<SanPhamResponse> searchSanPhamByTenOrSku(String keyword) {
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+
+        List<SanPham> sanPhamList =
+                sanPhamRepository.findByTenSpContainingIgnoreCaseOrMaSkuContainingIgnoreCase(
+                        keyword.trim(),
+                        keyword.trim()
+                );
+
+        return sanPhamList.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
 
 }

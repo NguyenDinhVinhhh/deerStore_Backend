@@ -49,4 +49,21 @@ public class KhachHangController {
         List<KhachHangResponse> danhSach = khachHangService.getAllKhachHang();
         return ResponseEntity.ok(danhSach);
     }
+
+    @PutMapping("/{ma_kh}")
+    public ResponseEntity<?> updateCustomer(
+            @PathVariable("ma_kh") Integer maKh,
+            @RequestBody KhachHang khachHang) {
+
+        try {
+            KhachHang updatedCustomer =
+                    khachHangService.updateCustomer(maKh, khachHang);
+
+            return ResponseEntity.ok(updatedCustomer);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

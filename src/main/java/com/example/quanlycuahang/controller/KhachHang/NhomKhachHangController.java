@@ -48,4 +48,16 @@ public class NhomKhachHangController {
         NhomKhachHang createdNhom = nhomKhachHangService.createNhomKhachHang(nhomKhachHang);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdNhom);
     }
+
+    //api xóa 1 hạng thành viên
+    @DeleteMapping("/{ma_nhom}")
+    public ResponseEntity<Void> deleteNhomKhachHang(@PathVariable Integer ma_nhom) {
+        try {
+            nhomKhachHangService.deleteNhomKhachHang(ma_nhom);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
