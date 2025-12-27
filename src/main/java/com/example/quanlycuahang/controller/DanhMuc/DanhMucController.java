@@ -34,7 +34,7 @@ public class DanhMucController {
 
     //api taọ mới danh mục
     @PostMapping
-    @PreAuthorize("hasAuthority('THEM_DANH_MUC')")
+//    @PreAuthorize("hasAuthority('THEM_DANH_MUC')")
     public ResponseEntity<DanhMuc> create(@Valid @RequestBody DanhMucRequest request) {
         DanhMuc newDanhMuc = danhMucService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(newDanhMuc);
@@ -42,7 +42,7 @@ public class DanhMucController {
 
     // api cập nhật danh mục
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('SUA_DANH_MUC')")
+//    @PreAuthorize("hasAuthority('SUA_DANH_MUC')")
     public ResponseEntity<DanhMuc> update(@PathVariable Integer id, @Valid @RequestBody DanhMucRequest request) {
         DanhMuc updatedDanhMuc = danhMucService.update(id, request);
         return ResponseEntity.ok(updatedDanhMuc);

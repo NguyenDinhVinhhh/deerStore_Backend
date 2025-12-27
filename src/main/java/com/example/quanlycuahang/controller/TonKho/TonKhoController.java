@@ -1,6 +1,7 @@
 package com.example.quanlycuahang.controller.TonKho;
 
 import com.example.quanlycuahang.dto.TonKho.BaoCaoTonKhoDTO;
+import com.example.quanlycuahang.dto.TonKho.SanPhamTonKhoResponse;
 import com.example.quanlycuahang.dto.TonKho.TonKhoAdjustmentRequest;
 import com.example.quanlycuahang.dto.TonKho.TonKhoRequest;
 import com.example.quanlycuahang.entity.TonKho.TonKho;
@@ -26,13 +27,17 @@ public class TonKhoController {
     }
 
     //api thiết lập tồn kho ban đầu
+    // API thiết lập tồn kho ban đầu
     @PostMapping
-    public ResponseEntity<TonKho> updateInventory(
+    public ResponseEntity<?> initInventory(
             @Valid @RequestBody TonKhoRequest request) {
 
-        TonKho updatedTonKho = tonKhoService.updateInventory(request);
-        return new ResponseEntity<>(updatedTonKho, HttpStatus.OK);
+        tonKhoService.updateInventory(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Thiết lập tồn kho ban đầu thành công");
     }
+
 
     //api lấy tổng số lượng tồn kho của sản phẩm trên tất cả các kho
     @GetMapping("/products/{maSp}/total")
@@ -146,5 +151,14 @@ public class TonKhoController {
 
         // 3. Trả về kết quả
         return ResponseEntity.ok(searchResults);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<SanPhamTonKhoResponse>> getTonKhoTheoKho(
+            @RequestParam Integer maKho
+    ) {
+        return ResponseEntity.ok(
+                tonKhoService.getSanPhamTonKhoTheoKho(maKho)
+        );
     }
 }

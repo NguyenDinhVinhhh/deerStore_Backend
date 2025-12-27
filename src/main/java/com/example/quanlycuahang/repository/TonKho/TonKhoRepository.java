@@ -1,5 +1,6 @@
 package com.example.quanlycuahang.repository.TonKho;
 
+import com.example.quanlycuahang.dto.TonKho.SanPhamTonKhoResponse;
 import com.example.quanlycuahang.entity.TonKho.TonKho;
 import com.example.quanlycuahang.entity.TonKho.TonKhoId;
 import jakarta.transaction.Transactional;
@@ -111,4 +112,23 @@ public interface TonKhoRepository extends JpaRepository<TonKho, TonKhoId> {
             @Param("maKho") Integer maKho,
             @Param("query") String query
     );
+
+
+    @Query("""
+    SELECT new com.example.quanlycuahang.dto.TonKho.SanPhamTonKhoResponse(
+        sp.maSp,
+        sp.tenSp,
+        sp.maSku,
+        COALESCE(tk.soLuongTon, 0),
+        CASE WHEN tk.id IS NULL THEN false ELSE true END
+    )
+    FROM SanPham sp
+    LEFT JOIN TonKho tk
+        ON sp.maSp = tk.id.maSp
+        AND tk.id.maKho = :maKho
+""")
+    List<SanPhamTonKhoResponse> getSanPhamTonKhoTheoKho(
+            @Param("maKho") Integer maKho
+    );
+
 }

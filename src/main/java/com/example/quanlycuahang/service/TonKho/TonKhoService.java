@@ -2,10 +2,12 @@ package com.example.quanlycuahang.service.TonKho;
 
 import com.example.quanlycuahang.dto.HoaDon.InvoiceItemDto;
 import com.example.quanlycuahang.dto.TonKho.BaoCaoTonKhoDTO;
+import com.example.quanlycuahang.dto.TonKho.SanPhamTonKhoResponse;
 import com.example.quanlycuahang.dto.TonKho.TonKhoAdjustmentRequest;
 import com.example.quanlycuahang.dto.TonKho.TonKhoRequest;
 import com.example.quanlycuahang.entity.TonKho.TonKho;
 import com.example.quanlycuahang.entity.TonKho.TonKhoId;
+import com.example.quanlycuahang.exception.BusinessException;
 import com.example.quanlycuahang.exception.InventoryAdjustmentException;
 import com.example.quanlycuahang.exception.ResourceNotFoundException;
 import com.example.quanlycuahang.repository.KhoHang.KhoHangRepository;
@@ -39,46 +41,50 @@ public class TonKhoService {
      * Đây là thao tác Cập nhật Tuyệt đối (Set), không phải Tăng/Giảm (Adjust).
      */
     @Transactional
-    public TonKho updateInventory(TonKhoRequest request) {
+    public void updateInventory(TonKhoRequest request) {
+
         if (!sanPhamRepository.existsById(request.getMaSp())) {
-            // Thay thế RuntimeException
-            throw new ResourceNotFoundException("Sản phẩm với mã " + request.getMaSp() + " không tồn tại.");
+            throw new ResourceNotFoundException(
+                    "Sản phẩm với mã " + request.getMaSp() + " không tồn tại."
+            );
         }
+
         if (!khoHangRepository.existsById(request.getMaKho())) {
-            // Thay thế RuntimeException
-            throw new ResourceNotFoundException("Kho hàng với mã " + request.getMaKho() + " không tồn tại.");
+            throw new ResourceNotFoundException(
+                    "Kho hàng với mã " + request.getMaKho() + " không tồn tại."
+            );
         }
 
-        // 2. Tạo ID phức hợp
-        TonKhoId id = new TonKhoId();
-        id.setMaSp(request.getMaSp());
-        id.setMaKho(request.getMaKho());
+        TonKhoId id = new TonKhoId(); id.setMaSp(request.getMaSp()); id.setMaKho(request.getMaKho());
 
-        // 3. Tìm bản ghi tồn kho hiện tại (nếu có)
-        Optional<TonKho> existingTonKho = tonKhoRepository.findById(id);
-        TonKho tonKho;
-
-        if (existingTonKho.isPresent()) {
-            // Cập nhật bản ghi đã tồn tại
-            tonKho = existingTonKho.get();
-        } else {
-            // Tạo bản ghi mới
-            tonKho = new TonKho();
-            tonKho.setId(id);
-            // Thiết lập mối quan hệ ManyToOne (cần thiết nếu bạn muốn truy cập .getSanPham() hoặc .getKhoHang())
-            // Giả sử SanPhamRepository và KhoHangRepository có phương thức findById
-            tonKho.setSanPham(sanPhamRepository.findById(request.getMaSp()).get());
-            tonKho.setKhoHang(khoHangRepository.findById(request.getMaKho()).get());
+        if (tonKhoRepository.existsById(id)) {
+            throw new BusinessException(
+                    "Tồn kho đã được thiết lập, không thể thiết lập lại."
+            );
         }
 
-        // 4. Thiết lập giá trị mới
+
+        TonKho tonKho = new TonKho();
+        tonKho.setId(id);
+        tonKho.setSanPham(
+                sanPhamRepository.getReferenceById(request.getMaSp())
+        );
+        tonKho.setKhoHang(
+                khoHangRepository.getReferenceById(request.getMaKho())
+        );
+
         tonKho.setSoLuongTon(request.getSoLuongTon());
-        tonKho.setGhiChu(request.getGhiChu());
+        tonKho.setGhiChu(
+                request.getGhiChu() != null
+                        ? request.getGhiChu()
+                        : "Thiết lập tồn kho ban đầu"
+        );
         tonKho.setNgayCapNhat(LocalDateTime.now());
 
-        // 5. Lưu vào DB
-        return tonKhoRepository.save(tonKho);
+        tonKhoRepository.save(tonKho);
     }
+
+
 
     // --- LOGIC TRUY VẤN TỒN KHO ---
 
@@ -284,5 +290,17 @@ public class TonKhoService {
                 throw new IllegalStateException("Lỗi tồn kho: Số lượng tồn kho của SP " + item.getMaSp() + " tại Kho " + maKho + " bị âm sau khi trừ.");
             }
         }
+    }
+
+    public List<SanPhamTonKhoResponse> getSanPhamTonKhoTheoKho(Integer maKho) {
+
+        // validate kho
+        if (!khoHangRepository.existsById(maKho)) {
+            throw new ResourceNotFoundException(
+                    "Kho hàng với mã " + maKho + " không tồn tại"
+            );
+        }
+
+        return tonKhoRepository.getSanPhamTonKhoTheoKho(maKho);
     }
 }

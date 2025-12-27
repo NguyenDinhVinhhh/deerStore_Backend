@@ -123,13 +123,18 @@ public class InvoiceService {
         hd.setTien_khach_tra(tienKhachTra);
 
         // Xác định trạng thái ban đầu
-        String initialStatus = "Hoàn thành";
-        if (isOnlinePayment) {
-            initialStatus = "Chờ thanh toán Online"; // 👈 Nếu là Online, luôn chờ
-        } else if (tienKhachTra.compareTo(thanhTien) < 0) {
-            initialStatus = "Chờ thanh toán";
+        String initialStatus;
+
+        if (tienKhachTra != null && tienKhachTra.compareTo(thanhTien) >= 0) {
+            // Đã thanh toán đủ (tiền mặt hoặc online thành công)
+            initialStatus = "HOAN THANH";
+        } else {
+            // Chưa thanh toán hoặc chờ thanh toán online
+            initialStatus = "CHO THANH TOAN";
         }
+
         hd.setTrang_thai(initialStatus);
+
 
         hd = hoaDonRepository.save(hd);
 
@@ -212,7 +217,7 @@ public class InvoiceService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy Hóa đơn ID: " + orderId));
 
         // 1. Xác thực Trạng thái
-        if (!"Chờ thanh toán Online".equals(hd.getTrang_thai())) {
+        if (!"CHO THANH TOAN".equals(hd.getTrang_thai())) {
             // Có thể là IPN (Instant Payment Notification) trùng lặp, bỏ qua
             System.out.println("Cảnh báo: IPN trùng lặp hoặc trạng thái không hợp lệ cho Hóa đơn ID: " + orderId);
             return;

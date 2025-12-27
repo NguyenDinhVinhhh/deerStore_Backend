@@ -59,7 +59,7 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
     @Query("""
         SELECT COUNT(hd)
         FROM HoaDon hd
-        WHERE hd.trang_thai = 'TRA_HANG'
+        WHERE hd.trang_thai = 'DON TRA'
           AND hd.ngay_lap BETWEEN :start AND :end
           AND (:maChiNhanh IS NULL OR hd.ma_chi_nhanh = :maChiNhanh)
     """)

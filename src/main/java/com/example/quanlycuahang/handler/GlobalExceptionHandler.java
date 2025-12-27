@@ -1,5 +1,6 @@
 package com.example.quanlycuahang.handler;
 
+import com.example.quanlycuahang.exception.BusinessException;
 import com.example.quanlycuahang.exception.InventoryAdjustmentException;
 import com.example.quanlycuahang.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -58,4 +59,32 @@ public class GlobalExceptionHandler {
      */
     // @ExceptionHandler(MethodArgumentNotValidException.class)
     // ...
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Object> handleBusinessException(
+            BusinessException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_REQUEST; // hoặc CONFLICT
+        Map<String, Object> body = createErrorResponse(
+                status,
+                ex.getMessage(),
+                request
+        );
+        return new ResponseEntity<>(body, status);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Object> handleIllegalState(
+            IllegalStateException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        Map<String, Object> body = createErrorResponse(
+                status,
+                ex.getMessage(),
+                request
+        );
+        return new ResponseEntity<>(body, status);
+    }
+
+
 }
