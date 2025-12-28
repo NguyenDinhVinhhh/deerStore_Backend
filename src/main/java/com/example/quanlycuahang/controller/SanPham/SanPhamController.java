@@ -86,24 +86,42 @@ public class SanPhamController {
     }
 
 
-   //api cập nhật
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // API cập nhật sản phẩm
+    @PutMapping(value = "/{id}/thong-tin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 //    @PreAuthorize("hasAuthority('SUA_SAN_PHAM')")
-    public ResponseEntity<SanPhamResponse> update(
+    public ResponseEntity<SanPhamResponse> updateThongTin(
             @PathVariable Integer id,
-            @RequestParam("tenSP") String tenSP,
-            @RequestParam("maSku") String maSku,
-            @RequestParam("donGia") BigDecimal donGia,
-            @RequestParam("giaVon") BigDecimal giaVon,
-            @RequestParam("moTa") String moTa,
-            @RequestParam("maDanhMuc") Integer maDanhMuc,
-            @RequestPart(value = "hinhAnhFile", required = false) MultipartFile hinhAnhFile
+            @RequestParam String tenSP,
+            @RequestParam String maSku,
+            @RequestParam String moTa,
+            @RequestParam Integer maDanhMuc,
+            @RequestParam(required = false) Integer soManhGhep,
+            @RequestParam(required = false) Integer thoiGianGhep,
+            @RequestParam(required = false) Integer doKho,
+            @RequestPart(required = false) MultipartFile hinhAnhFile
     ) {
-        SanPhamResponse updatedSp = sanPhamService.updateByParams(
-                id, tenSP, maSku, donGia, giaVon, moTa, maDanhMuc, hinhAnhFile
+        return ResponseEntity.ok(
+                sanPhamService.updateThongTinSanPham(
+                        id, tenSP, maSku, moTa, maDanhMuc,
+                        soManhGhep, thoiGianGhep, doKho,
+                        hinhAnhFile
+                )
         );
-        return ResponseEntity.ok(updatedSp);
     }
+
+    @PutMapping("/{id}/gia")
+//    @PreAuthorize("hasAuthority('CAP_NHAT_GIA')")
+    public ResponseEntity<SanPhamResponse> updateGia(
+            @PathVariable Integer id,
+            @RequestParam BigDecimal donGia,
+            @RequestParam BigDecimal giaVon
+    ) {
+        return ResponseEntity.ok(
+                sanPhamService.updateGiaSanPham(id, donGia, giaVon)
+        );
+    }
+
+
 
     // api xóa sản phẩm
     @DeleteMapping("/{id}")

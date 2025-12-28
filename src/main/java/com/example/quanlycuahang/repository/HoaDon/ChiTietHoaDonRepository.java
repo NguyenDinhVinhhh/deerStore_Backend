@@ -102,6 +102,11 @@ public interface ChiTietHoaDonRepository extends JpaRepository<ChiTietHoaDon, In
             Pageable pageable
     );
 
+    @Query("""
+    SELECT c FROM ChiTietHoaDon c
+    WHERE c.ma_hd = :maHd
+""")
+    List<ChiTietHoaDon> findByHoaDon(@Param("maHd") Integer maHd);
 
 
 

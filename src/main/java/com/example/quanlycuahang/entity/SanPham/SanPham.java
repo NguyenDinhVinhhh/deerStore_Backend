@@ -41,6 +41,15 @@ public class SanPham {
     @Column(name = "trang_thai")
     private Boolean trangThai = true;
 
+    @Column(name = "so_manh_ghep")
+    private Integer soManhGhep;
+
+    @Column(name = "thoi_gian_ghep")
+    private Integer thoiGianGhep; // phút
+
+    @Column(name = "do_kho")
+    private Integer doKho;
+
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ma_danh_muc", referencedColumnName = "ma_danh_muc", insertable = false, updatable = false)
@@ -52,6 +61,29 @@ public class SanPham {
     }
 
 
+    public Integer getSoManhGhep() {
+        return soManhGhep;
+    }
+
+    public void setSoManhGhep(Integer soManhGhep) {
+        this.soManhGhep = soManhGhep;
+    }
+
+    public Integer getThoiGianGhep() {
+        return thoiGianGhep;
+    }
+
+    public void setThoiGianGhep(Integer thoiGianGhep) {
+        this.thoiGianGhep = thoiGianGhep;
+    }
+
+    public Integer getDoKho() {
+        return doKho;
+    }
+
+    public void setDoKho(Integer doKho) {
+        this.doKho = doKho;
+    }
 
     public Integer getMaSp() {
         return maSp;

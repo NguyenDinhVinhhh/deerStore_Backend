@@ -3,6 +3,7 @@ package com.example.quanlycuahang.entity.HoaDon;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "hoa_don")
@@ -31,9 +32,19 @@ public class HoaDon {
     @Column(name = "tien_khach_tra", precision = 12, scale = 2)
     private BigDecimal tien_khach_tra; // Số tiền khách đưa
 
+    public List<ChiTietHoaDon> getChiTietHoaDon() {
+        return chiTietHoaDon;
+    }
+
+    public void setChiTietHoaDon(List<ChiTietHoaDon> chiTietHoaDon) {
+        this.chiTietHoaDon = chiTietHoaDon;
+    }
+
     @Column(name = "ma_voucher_su_dung", length = 100)
     private String ma_voucher_su_dung;
 
+    @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY)
+    private List<ChiTietHoaDon> chiTietHoaDon;
     // Getters and Setters
     public Integer getMa_hd() { return ma_hd; }
     public void setMa_hd(Integer ma_hd) { this.ma_hd = ma_hd; }

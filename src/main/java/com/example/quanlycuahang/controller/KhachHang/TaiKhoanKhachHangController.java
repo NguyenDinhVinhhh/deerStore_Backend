@@ -5,6 +5,7 @@ import com.example.quanlycuahang.dto.KhachHang.DangNhapKhachHangRequest;
 import com.example.quanlycuahang.dto.KhachHang.TaiKhoanKhachHangReponse;
 import com.example.quanlycuahang.entity.TaiKhoanKhachHang.TaiKhoanKhachHang;
 import com.example.quanlycuahang.service.KhachHang.TaiKhoanKhachHangService;
+import com.example.quanlycuahang.util.JwtUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,46 +20,84 @@ public class TaiKhoanKhachHangController {
 
     @Autowired
     private TaiKhoanKhachHangService taiKhoanKhachHangService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    ///  api đăng ký tài khoản khách hàng
+
     @PostMapping("/register")
-    public ResponseEntity<?> registerCustomer(@Valid @RequestBody DangKyKhachHangRequest registerRequest) {
+    public ResponseEntity<?> registerCustomer(
+            @Valid @RequestBody DangKyKhachHangRequest registerRequest
+    ) {
         try {
+            // 1. Tạo tài khoản
+            TaiKhoanKhachHang newAccount =
+                    taiKhoanKhachHangService.register(registerRequest);
 
-            TaiKhoanKhachHang newAccount = taiKhoanKhachHangService.register(registerRequest);
-
-            TaiKhoanKhachHangReponse response = new TaiKhoanKhachHangReponse(
-                    newAccount.getMaKh(),
-                    newAccount.getTenDangNhap(),
-                    "Đăng ký thành công!"
+            // 2. Sinh JWT ngay sau khi đăng ký
+            String token = jwtUtil.generateJwtToken(
+                    newAccount.getTenDangNhap()
             );
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            // 3. Response
+            TaiKhoanKhachHangReponse response =
+                    new TaiKhoanKhachHangReponse(
+                            newAccount.getMaKh(),
+                            newAccount.getTenDangNhap(),
+                            token,
+                            "Đăng ký thành công"
+
+                    );
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(response);
 
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi hệ thống: " + e.getMessage());
         }
     }
 
-    ///  api đăng nhập tài khoản khách hàng
+
     @PostMapping("/login")
-    public ResponseEntity<?> loginCustomer(@Valid @RequestBody DangNhapKhachHangRequest login) {
+    public ResponseEntity<?> loginCustomer(
+            @Valid @RequestBody DangNhapKhachHangRequest login
+    ) {
         try {
-            TaiKhoanKhachHang loggedInAccount = taiKhoanKhachHangService.login(login);
-            TaiKhoanKhachHangReponse response = new TaiKhoanKhachHangReponse(
-                    loggedInAccount.getMaKh(),
-                    loggedInAccount.getTenDangNhap(),
-                    "Đăng nhập thành công!"
+            TaiKhoanKhachHang loggedInAccount =
+                    taiKhoanKhachHangService.login(login);
+
+            // 🔐 Sinh JWT
+            String token = jwtUtil.generateJwtToken(
+                    loggedInAccount.getTenDangNhap()
             );
+
+            TaiKhoanKhachHangReponse response =
+                    new TaiKhoanKhachHangReponse(
+                            loggedInAccount.getMaKh(),
+                            loggedInAccount.getTenDangNhap(),
+
+                            token,
+                            "Đăng nhập thành công"
+
+                    );
 
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi hệ thống: " + e.getMessage());
         }
     }
+
 }

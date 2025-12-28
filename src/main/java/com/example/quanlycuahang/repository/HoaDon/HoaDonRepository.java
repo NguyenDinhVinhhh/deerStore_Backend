@@ -25,6 +25,14 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
     @Query("SELECT COUNT(h) FROM HoaDon h WHERE h.ma_kh = :maKh")
     Long countAllByMaKh(@Param("maKh") Integer maKh);
 
+    @Query("""
+    SELECT h FROM HoaDon h
+    WHERE h.ma_kh = :maKh
+    ORDER BY h.ngay_lap DESC
+""")
+    List<HoaDon> findLichSuMuaHang(@Param("maKh") Integer maKh);
+
+
 
     // ================== DASHBOARD HÔM NAY ==================
 

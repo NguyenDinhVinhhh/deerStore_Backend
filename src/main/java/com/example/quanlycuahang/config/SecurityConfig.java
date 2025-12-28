@@ -77,6 +77,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/kho-hang/**").permitAll()
                         .requestMatchers("/api/invoices/**").permitAll()
                         .requestMatchers("/api/san-pham/**").permitAll()
+                        .requestMatchers("/api/lich-su-mua-hang/**").permitAll()
+                        .requestMatchers("/api/chi-nhanh/**").permitAll()
                         .requestMatchers("/api/danh-muc/**").permitAll()
                         .requestMatchers("/api/momo/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/san-pham/**").permitAll()

@@ -53,9 +53,11 @@ public class SanPhamService {
     }
 
     private SanPhamResponse mapToResponse(SanPham sanPham) {
+
         DanhMuc danhMuc = sanPham.getDanhMuc();
         Integer maSp = sanPham.getMaSp();
         Integer tonKhoDetails = tonKhoService.getTotalStockByProduct(maSp);
+
         return SanPhamResponse.builder()
                 .maSp(sanPham.getMaSp())
                 .maSku(sanPham.getMaSku())
@@ -63,13 +65,28 @@ public class SanPhamService {
                 .moTa(sanPham.getMoTa())
                 .donGia(sanPham.getDonGia())
                 .giaVon(sanPham.getGiaVon())
-                .hinhAnhUrl(sanPham.getHinhAnh() != null ? imageBaseUrl + sanPham.getHinhAnh() : null)
+                .hinhAnhUrl(
+                        sanPham.getHinhAnh() != null
+                                ? imageBaseUrl + sanPham.getHinhAnh()
+                                : null
+                )
                 .maDanhMuc(sanPham.getMaDanhMuc())
-                .tenDanhMuc(danhMuc != null ? danhMuc.getTenDanhMuc() : "Không xác định")
+                .tenDanhMuc(
+                        danhMuc != null
+                                ? danhMuc.getTenDanhMuc()
+                                : "Không xác định"
+                )
                 .trangThai(sanPham.getTrangThai())
                 .tonKhoTong(tonKhoDetails)
+
+                // ====== 3 FIELD MỚI ======
+                .soManhGhep(sanPham.getSoManhGhep())
+                .thoiGianGhep(sanPham.getThoiGianGhep())
+                .doKho(sanPham.getDoKho())
+
                 .build();
     }
+
 
     public SanPhamResponse findByIdResponse(Integer id) {
         SanPham sanPham = findById(id);
@@ -121,19 +138,21 @@ public class SanPhamService {
         return findByIdResponse(saved.getMaSp());
     }
 
-    public SanPhamResponse updateByParams(
+    public SanPhamResponse updateThongTinSanPham(
             Integer id,
             String tenSP,
             String maSku,
-            BigDecimal donGia,
-            BigDecimal giaVon,
             String moTa,
             Integer maDanhMuc,
-            MultipartFile newHinhAnhFile
+            Integer soManhGhep,
+            Integer thoiGianGhep,
+            Integer doKho,
+            MultipartFile hinhAnhFile
     ) {
+        // 1️⃣ Lấy sản phẩm
         SanPham sp = findById(id);
 
-        // Kiểm tra SKU trùng
+        // 2️⃣ Kiểm tra SKU trùng (nếu có thay đổi)
         sanPhamRepository.findByMaSku(maSku)
                 .ifPresent(existing -> {
                     if (!existing.getMaSp().equals(id)) {
@@ -141,29 +160,60 @@ public class SanPhamService {
                     }
                 });
 
-        // Kiểm tra danh mục
+        // 3️⃣ Kiểm tra danh mục tồn tại
         danhMucRepository.findById(maDanhMuc)
-                .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại: " + maDanhMuc));
+                .orElseThrow(() ->
+                        new RuntimeException("Danh mục không tồn tại: " + maDanhMuc)
+                );
 
+        // 4️⃣ Xử lý hình ảnh
         String oldFile = sp.getHinhAnh();
         String newFile = oldFile;
 
-        if (newHinhAnhFile != null && !newHinhAnhFile.isEmpty()) {
-            if (oldFile != null) fileUploadService.deleteFile(oldFile);
-            newFile = fileUploadService.storeFile(newHinhAnhFile);
+        if (hinhAnhFile != null && !hinhAnhFile.isEmpty()) {
+            // Xóa ảnh cũ nếu có
+            if (oldFile != null && !oldFile.isBlank()) {
+                fileUploadService.deleteFile(oldFile);
+            }
+            // Lưu ảnh mới
+            newFile = fileUploadService.storeFile(hinhAnhFile);
         }
 
+        // 5️⃣ Cập nhật thông tin (KHÔNG cập nhật giá)
         sp.setTenSp(tenSP);
         sp.setMaSku(maSku);
-        sp.setDonGia(donGia);
-        sp.setGiaVon(giaVon);
         sp.setMoTa(moTa);
         sp.setMaDanhMuc(maDanhMuc);
+        sp.setSoManhGhep(soManhGhep);
+        sp.setThoiGianGhep(thoiGianGhep);
+        sp.setDoKho(doKho);
         sp.setHinhAnh(newFile);
 
+        // 6️⃣ Lưu DB
         SanPham updated = sanPhamRepository.save(sp);
+
+        // 7️⃣ Trả response
         return findByIdResponse(updated.getMaSp());
     }
+
+
+    public SanPhamResponse updateGiaSanPham(
+            Integer id,
+            BigDecimal donGia,
+            BigDecimal giaVon
+    ) {
+        SanPham sp = findById(id);
+
+        if (giaVon.compareTo(donGia) > 0) {
+            throw new RuntimeException("Giá vốn không được lớn hơn giá bán");
+        }
+
+        sp.setDonGia(donGia);
+        sp.setGiaVon(giaVon);
+
+        return findByIdResponse(sanPhamRepository.save(sp).getMaSp());
+    }
+
 
     public void delete(Integer id) {
         SanPham sanPham = sanPhamRepository.findById(id)

@@ -36,6 +36,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String tenDangNhap;
 
+        String path = request.getRequestURI();
+        // 🚫 BỎ QUA AUTH NHÂN VIÊN CHO API KHÁCH HÀNG
+        if (path.startsWith("/api/auth/customer")
+                || path.startsWith("/api/customer")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // 1. Kiểm tra header: Không có hoặc không bắt đầu bằng "Bearer "
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
