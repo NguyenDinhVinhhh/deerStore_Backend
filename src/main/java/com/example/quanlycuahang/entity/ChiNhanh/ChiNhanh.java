@@ -1,11 +1,17 @@
 package com.example.quanlycuahang.entity.ChiNhanh;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "chi_nhanh")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ChiNhanh {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,5 +31,6 @@ public class ChiNhanh {
     private String nguoiQuanLy;
 
     @Column(name = "trang_thai")
-    private Boolean trangThai = true; // tinyint(1) -> Boolean
+    @Builder.Default
+    private Boolean trangThai = true;
 }

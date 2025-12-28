@@ -29,7 +29,7 @@ public class ChiNhanhController {
     // api lấy chi nhánh theo id
     @GetMapping("/{id}")
     public ResponseEntity<ChiNhanhDto> getBranchById(@PathVariable Integer id) {
-        return ResponseEntity.ok(chiNhanhService.findById(id));
+        return ResponseEntity.status(HttpStatus.OK).body(chiNhanhService.findById(id));
     }
 
     // api thêm mới chi nhánh
@@ -55,12 +55,4 @@ public class ChiNhanhController {
         chiNhanhService.delete(id);
         return ResponseEntity.noContent().build();
     }
-
-    // api lấy danh sách chi nhánh theo tài khoản thừa chưa dùng
-//    @GetMapping("/by-user")
-//    @PreAuthorize("isAuthenticated()") // Chỉ cần xác thực
-//    public ResponseEntity<List<ChiNhanhDto>> getBranchesByMaTk(@RequestParam Integer maTk) {
-//        List<ChiNhanhDto> branches = chiNhanhService.getBranchesByMaTk(maTk);
-//        return ResponseEntity.ok(branches);
-//    }
 }

@@ -1,90 +1,100 @@
 package com.example.quanlycuahang.handler;
 
 import com.example.quanlycuahang.exception.BusinessException;
+import com.example.quanlycuahang.exception.DuplicateResourceException;
 import com.example.quanlycuahang.exception.InventoryAdjustmentException;
 import com.example.quanlycuahang.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Tạo một cấu trúc response chung cho lỗi
-    private Map<String, Object> createErrorResponse(HttpStatus status, String message, WebRequest request) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("message", message);
-        body.put("path", request.getDescription(false).replace("uri=", ""));
-        return body;
+    /**
+     * Helper method để tạo đối tượng ErrorResponse đồng nhất
+     */
+    private ErrorResponse buildErrorResponse(HttpStatus status, String message, WebRequest request) {
+        return ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(status.value())
+                .error(status.getReasonPhrase())
+                .message(message)
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
     }
 
     /**
-     * Xử lý lỗi khi không tìm thấy tài nguyên (ví dụ: SP, Kho không tồn tại)
-     * Ánh xạ sang HTTP 404 NOT FOUND.
+     * 1. Xử lý lỗi Validation (@Valid trên DTO)
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(
+            MethodArgumentNotValidException ex, WebRequest request) {
+
+        String errorMessage = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+
+        ErrorResponse error = buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage, request);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * 2. Xử lý lỗi không tìm thấy tài nguyên (404 Not Found)
      */
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Object> handleResourceNotFoundException(
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
 
-        HttpStatus status = HttpStatus.NOT_FOUND;
-        Map<String, Object> body = createErrorResponse(status, ex.getMessage(), request);
-        return new ResponseEntity<>(body, status);
+        ErrorResponse error = buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
     /**
-     * Xử lý lỗi nghiệp vụ liên quan đến điều chỉnh tồn kho (ví dụ: Tồn kho âm)
-     * Ánh xạ sang HTTP 400 BAD REQUEST.
+     * 3. Xử lý các lỗi nghiệp vụ (Business & Inventory)
      */
-    @ExceptionHandler(InventoryAdjustmentException.class)
-    public ResponseEntity<Object> handleInventoryAdjustmentException(
-            InventoryAdjustmentException ex, WebRequest request) {
+    @ExceptionHandler({
+            BusinessException.class,
+            InventoryAdjustmentException.class,
+            IllegalStateException.class
+    })
+    public ResponseEntity<ErrorResponse> handleBusinessExceptions(
+            Exception ex, WebRequest request) {
 
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        Map<String, Object> body = createErrorResponse(status, ex.getMessage(), request);
-        return new ResponseEntity<>(body, status);
+        ErrorResponse error = buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     /**
-     * Xử lý lỗi Bad Request chung (ví dụ: lỗi Validation từ @Valid)
-     * (Thường phức tạp hơn, nhưng đây là ví dụ cơ bản)
+     * 4. Xử lý các lỗi hệ thống không mong đợi (Cái "lưới" cuối cùng)
      */
-    // @ExceptionHandler(MethodArgumentNotValidException.class)
-    // ...
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
+        // In lỗi ra màn hình đen (Console) của IntelliJ để bạn đọc
+        ex.printStackTrace();
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<Object> handleBusinessException(
-            BusinessException ex, WebRequest request) {
-
-        HttpStatus status = HttpStatus.BAD_REQUEST; // hoặc CONFLICT
-        Map<String, Object> body = createErrorResponse(
-                status,
-                ex.getMessage(),
+        ErrorResponse error = buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Lỗi hệ thống: " + ex.getMessage(), // Hiển thị thông báo lỗi gốc
                 request
         );
-        return new ResponseEntity<>(body, status);
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Object> handleIllegalState(
-            IllegalStateException ex, WebRequest request) {
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
+            DuplicateResourceException ex, WebRequest request) {
 
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        Map<String, Object> body = createErrorResponse(
-                status,
-                ex.getMessage(),
-                request
-        );
-        return new ResponseEntity<>(body, status);
+        ErrorResponse error = buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
-
-
 }
