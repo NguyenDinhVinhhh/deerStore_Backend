@@ -16,6 +16,10 @@ import com.example.quanlycuahang.repository.VaiTro.VaiTroRepository;
 import com.example.quanlycuahang.service.ChiNhanh.BranchService;
 import com.example.quanlycuahang.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.stream.Collectors;
@@ -49,6 +53,9 @@ public class AuthService {
     @Autowired
     private JwtUtil jwtUtils;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
     public String register(TaiKhoan taiKhoan) {
         if(taiKhoanRepository.existsByTenDangNhap(taiKhoan.getTenDangNhap())) {
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
@@ -59,15 +66,16 @@ public class AuthService {
     }
 
     public String login(String tenDangNhap, String matKhau) {
-        Optional<TaiKhoan> tkOpt = taiKhoanRepository.findByTenDangNhap(tenDangNhap);
-        if(!tkOpt.isPresent()) throw new RuntimeException("Tài khoản không tồn tại");
-        TaiKhoan tk = tkOpt.get();
+        // 1. Thực hiện xác thực bằng Spring Security
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(tenDangNhap, matKhau)
+        );
 
-        if(!passwordEncoder.matches(matKhau, tk.getMatKhau())) {
-            throw new RuntimeException("Mật khẩu không đúng");
-        }
+        // 2. Lưu vào Context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return jwtUtils.generateJwtToken(tk.getTenDangNhap());
+        // 3. Truyền đối tượng AUTHENTICATION vào để JwtUtil lấy được quyền (authorities)
+        return jwtUtils.generateJwtToken(authentication);
     }
     public TaiKhoan registerStaff(StaffRegisterRequest request) {
 

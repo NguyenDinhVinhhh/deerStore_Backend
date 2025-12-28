@@ -1,4 +1,4 @@
-package com.example.quanlycuahang.thongke;
+package com.example.quanlycuahang.controller.thongke;
 
 import com.example.quanlycuahang.dto.HoaDon.TopSanPhamDTO;
 import com.example.quanlycuahang.service.BAOCAO.BaoCaoBanHangService;

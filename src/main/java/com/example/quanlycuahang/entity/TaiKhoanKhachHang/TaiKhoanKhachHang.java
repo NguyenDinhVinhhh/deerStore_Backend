@@ -2,9 +2,14 @@ package com.example.quanlycuahang.entity.TaiKhoanKhachHang;
 
 import com.example.quanlycuahang.entity.KhachHang.KhachHang;
 import jakarta.persistence.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
 
 
 // Import từ jakarta.persistence.* nếu bạn dùng Spring Boot 3+
@@ -12,8 +17,35 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "tai_khoan_khach_hang")
-public class TaiKhoanKhachHang implements Serializable {
+public class TaiKhoanKhachHang implements Serializable, UserDetails {
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Gán quyền mặc định cho khách hàng
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.matKhau;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.tenDangNhap;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() { return true; }
+
+    @Override
+    public boolean isAccountNonLocked() { return this.trangThai == 1; }
+
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
+
+    @Override
+    public boolean isEnabled() { return this.trangThai == 1; }
     // Khóa chính (Primary Key) và cũng là Khóa ngoại (Foreign Key)
     // Ánh xạ với cột `ma_kh`
     @Id

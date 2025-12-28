@@ -1,5 +1,7 @@
 package com.example.quanlycuahang.config;
 
+import com.example.quanlycuahang.handler.CustomAccessDeniedHandler;
+import com.example.quanlycuahang.handler.CustomAuthenticationEntryPoint;
 import com.example.quanlycuahang.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +32,12 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Autowired
+    private CustomAccessDeniedHandler customAccessDeniedHandler;
+
+    @Autowired
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     private final UserDetailsService userDetailsService;
 
@@ -62,28 +70,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors() // ✅ Bật CORS ở đây
+                .cors()
                 .and()
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
                 .authorizeHttpRequests(auth -> auth
+
+                        // các api mở
+                        .requestMatchers("/api/invoices/momo/ipn").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/vaitro/**").permitAll()
-                        .requestMatchers("/api/quyen/**").permitAll()
-                        .requestMatchers("/api/khach-hang/**").permitAll()
-                        .requestMatchers("/api/nhom-khach-hang/**").permitAll()
-                        .requestMatchers("/api/ton-kho/**").permitAll()
-                        .requestMatchers("/api/kho-hang/**").permitAll()
-                        .requestMatchers("/api/invoices/**").permitAll()
-                        .requestMatchers("/api/san-pham/**").permitAll()
-                        .requestMatchers("/api/lich-su-mua-hang/**").permitAll()
-                        .requestMatchers("/api/chi-nhanh/**").permitAll()
-                        .requestMatchers("/api/danh-muc/**").permitAll()
-                        .requestMatchers("/api/momo/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/san-pham/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/danh-muc/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/san-pham/**", "/api/danh-muc/**","/api/chi-nhanh/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/api/momo/**").permitAll()
+
+
+                        // các api đóng
+                        .requestMatchers("/api/chi-nhanh/**").authenticated()
+                        // Trong SecurityConfig.java
+                        .requestMatchers("/api/lich-su-mua-hang/**").permitAll()
+                        .requestMatchers("/api/vaitro/**").authenticated()
+                        .requestMatchers("/api/quyen/**").authenticated()
+                        .requestMatchers("/api/khach-hang/**").authenticated()
+                        .requestMatchers("/api/nhom-khach-hang/**").authenticated()
+                        .requestMatchers("/api/ton-kho/**").authenticated()
+                        .requestMatchers("/api/kho-hang/**").authenticated()
+                        .requestMatchers("/api/invoices/**").authenticated()
+                        .requestMatchers("/api/san-pham/**").authenticated()
+                        .requestMatchers("/api/lich-su-mua-hang/**").authenticated()
+
+
+                        //Tất cả các request còn lại cũng phải đăng nhập
                         .anyRequest().authenticated()
                 );
 

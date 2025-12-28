@@ -1,7 +1,7 @@
 package com.example.quanlycuahang.security;
 
-
 import com.example.quanlycuahang.dto.Auth.CustomUserDetailsService;
+import com.example.quanlycuahang.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,10 +20,10 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JwtService jwtService;
+    private JwtUtil jwtUtil; // ✅ Đổi từ JwtService sang JwtUtil để đồng bộ Key
 
     @Autowired
-    private CustomUserDetailsService userDetailsService; // Sử dụng CustomUserDetailsService đã tạo
+    private CustomUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -37,51 +37,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String tenDangNhap;
 
         String path = request.getRequestURI();
-        // 🚫 BỎ QUA AUTH NHÂN VIÊN CHO API KHÁCH HÀNG
-        if (path.startsWith("/api/auth/customer")
-                || path.startsWith("/api/customer")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
-        // 1. Kiểm tra header: Không có hoặc không bắt đầu bằng "Bearer "
+
+
+        // 1. Kiểm tra header Authorization
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 2. Trích xuất JWT (Bỏ "Bearer ")
+        // 2. Trích xuất JWT
         jwt = authHeader.substring(7);
 
-        // 3. Trích xuất Tên đăng nhập từ Token
-        tenDangNhap = jwtService.extractUsername(jwt);
+        try {
+            // 3. Trích xuất Username bằng JwtUtil mới
+            tenDangNhap = jwtUtil.extractUsername(jwt);
 
-        // 4. Kiểm tra người dùng và Security Context (Đảm bảo người dùng chưa được xác thực)
-        if (tenDangNhap != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // 4. Nếu có username và chưa được xác thực trong phiên này
+            if (tenDangNhap != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // 5. Tải thông tin người dùng từ CSDL
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(tenDangNhap);
+                // 5. Tải thông tin chi tiết người dùng từ DB (bao gồm các quyền mới nhất)
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(tenDangNhap);
 
-            // 6. Kiểm tra Token hợp lệ (chữ ký và hạn sử dụng)
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+                // 6. Kiểm tra tính hợp lệ của Token bằng JwtUtil
+                if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
 
-                // 7. Thiết lập đối tượng xác thực
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null, // Credentials là null vì đã xác thực qua Token
-                        userDetails.getAuthorities() // Lấy quyền từ UserDetails
-                );
+                    // 7. Tạo đối tượng xác thực nạp các quyền (authorities) vào SecurityContext
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
 
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // 8. Lưu đối tượng xác thực vào Security Context
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    // 8. Lưu vào hệ thống để các tầng sau (như Controller) nhận diện được quyền
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            // Nếu Token lỗi hoặc không hợp lệ, không nạp Authentication (Spring sẽ tự báo 401/403 sau đó)
+            logger.error("Could not set user authentication in security context", e);
         }
 
-        // Chuyển request đến Controller hoặc Filter tiếp theo
         filterChain.doFilter(request, response);
     }
 }

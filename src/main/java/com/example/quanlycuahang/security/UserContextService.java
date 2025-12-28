@@ -1,27 +1,32 @@
 package com.example.quanlycuahang.security;
 
 import com.example.quanlycuahang.entity.TaiKhoan.TaiKhoan;
+import com.example.quanlycuahang.entity.TaiKhoanKhachHang.TaiKhoanKhachHang;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserContextService {
 
-    public TaiKhoan getCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public Object getCurrentPrincipal() {
+        return SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
 
-        if (principal instanceof TaiKhoan) {
-            return (TaiKhoan) principal;
+    // Hàm lấy ID khách hàng đang đăng nhập
+    public Integer getCurrentMaKhachHang() {
+        Object principal = getCurrentPrincipal();
+        if (principal instanceof TaiKhoanKhachHang) {
+            return ((TaiKhoanKhachHang) principal).getMaKh();
         }
-        // Trường hợp không xác thực hoặc cấu hình sai
-        throw new IllegalStateException("Không tìm thấy thông tin Tài khoản trong Security Context.");
+        throw new IllegalStateException("Người dùng hiện tại không phải là Khách hàng.");
     }
 
-    public Integer getCurrentMaTk() {
-        return getCurrentUser().getMaTk();
-    }
-
-    public Boolean isCurrentUserSuperAdmin() {
-        return getCurrentUser().getIsSuperAdmin();
+    // Hàm lấy ID nhân viên đang đăng nhập
+    public Integer getCurrentMaNhanVien() {
+        Object principal = getCurrentPrincipal();
+        if (principal instanceof TaiKhoan) {
+            return ((TaiKhoan) principal).getMaTk();
+        }
+        throw new IllegalStateException("Người dùng hiện tại không phải là Nhân viên.");
     }
 }

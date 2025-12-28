@@ -213,68 +213,53 @@ public class InvoiceService {
     public void finalizeOnlinePayment(String orderId, String transId, BigDecimal amount, String phuongThuc) throws Exception {
         int maHd = Integer.parseInt(orderId);
 
+        // 1. Tìm hóa đơn trong Database
         HoaDon hd = hoaDonRepository.findById(maHd)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy Hóa đơn ID: " + orderId));
 
-        // 1. Xác thực Trạng thái
+        // 2. Xác thực trạng thái - Tránh xử lý trùng lặp nếu MoMo gửi IPN nhiều lần
         if (!"CHO THANH TOAN".equals(hd.getTrang_thai())) {
-            // Có thể là IPN (Instant Payment Notification) trùng lặp, bỏ qua
-            System.out.println("Cảnh báo: IPN trùng lặp hoặc trạng thái không hợp lệ cho Hóa đơn ID: " + orderId);
+            System.out.println("Cảnh báo: IPN trùng lặp cho Hóa đơn ID: " + orderId);
             return;
         }
 
-        // 2. Xác thực Số tiền
+        // 3. Xác thực số tiền thanh toán khớp với hóa đơn
         if (hd.getThanh_tien().compareTo(amount) != 0) {
-            throw new IllegalStateException("Số tiền thanh toán (" + amount + ") không khớp với hóa đơn (" + hd.getThanh_tien() + ").");
+            throw new IllegalStateException("Số tiền MoMo trả về (" + amount + ") không khớp với hóa đơn (" + hd.getThanh_tien() + ").");
         }
 
-        // 3. Cập nhật Hóa đơn và Ghi Thanh toán
+        // 4. Cập nhật trạng thái Hóa đơn và ghi nhận số tiền khách trả
         hd.setTrang_thai("HOAN THANH");
         hd.setTien_khach_tra(hd.getThanh_tien());
         hoaDonRepository.save(hd);
 
+        // 5. Ghi lịch sử vào bảng ThanhToan
         ThanhToan tt = new ThanhToan();
         tt.setMa_hd(maHd);
         tt.setPhuong_thuc(phuongThuc);
         tt.setSo_tien(amount);
-        tt.setGhi_chu("Mã giao dịch: " + transId);
+        tt.setGhi_chu("Thanh toán Online thành công. Mã giao dịch: " + transId);
         thanhToanRepository.save(tt);
 
-        // -----------------------------------------------------
-        // 4. BỔ SUNG LOGIC NGHIỆP VỤ BỊ TRÌ HOÃN
-        // -----------------------------------------------------
-
-        // 4a. TRỪ TỒN KHO
-
-        // Lấy chi tiết hóa đơn (cần thiết để biết sản phẩm và số lượng)
+        // 6. Thực hiện trừ tồn kho (Dựa trên chi tiết hóa đơn đã lưu)
         List<ChiTietHoaDon> chiTietList = chiTietHoaDonRepository.findByMaHdQuery(maHd);
-
-        // Chuyển đổi sang DTO tương thích với TonKhoService
         List<InvoiceItemDto> itemsToDeduct = chiTietList.stream()
                 .map(ct -> new InvoiceItemDto(ct.getMa_sp(), ct.getSo_luong()))
                 .collect(Collectors.toList());
 
-        // Xác định Kho hàng
         Integer maKho = khoHangService.getMaKhoByMaChiNhanh(hd.getMa_chi_nhanh());
-
-        // Thực hiện trừ tồn kho
         tonkhoService.deductStock(maKho, itemsToDeduct);
 
-        // 4b. CẬP NHẬT TÍCH LŨY VÀ XÉT THĂNG HẠNG
+
         Integer maKhachHang = hd.getMa_kh();
-        BigDecimal thanhTien = hd.getThanh_tien();
-
         if (maKhachHang != null) {
-            // Cập nhật Tổng chi tiêu lũy kế
-            KhachHang updatedKhachHang = khachHangService.updateCumulativeSpending(maKhachHang, thanhTien);
-
-            // Xét thăng hạng
-            if (updatedKhachHang != null) {
-                khachHangService.checkAndUpgradeRank(updatedKhachHang);
+            KhachHang updatedKh = khachHangService.updateCumulativeSpending(maKhachHang, hd.getThanh_tien());
+            if (updatedKh != null) {
+                khachHangService.checkAndUpgradeRank(updatedKh);
             }
         }
 
-        // Giao dịch kết thúc thành công.
+        System.out.println("Thanh toán thành công và hoàn tất nghiệp vụ cho Hóa đơn: " + maHd);
     }
 
     public ThongKe_Donhang_Doanhthu_Request thongKeHomNay(Integer maChiNhanh) {

@@ -170,28 +170,34 @@ public class KhachHangService {
     }
 
     //hàm cập nhật chi tiêu lũy kế
+    @Transactional
     public KhachHang updateCumulativeSpending(Integer maKh, BigDecimal amountToAdd) {
+        // 1. Kiểm tra đầu vào hợp lệ
         if (maKh == null || amountToAdd == null || amountToAdd.compareTo(BigDecimal.ZERO) <= 0) {
-            // Không làm gì nếu không có MaKh hoặc số tiền không hợp lệ
             return null;
         }
 
-        // Tải Khách hàng (Sử dụng KhachHangRepository.findById)
+        // 2. Tải khách hàng từ Repository
         Optional<KhachHang> optionalKhachHang = khachHangRepository.findById(maKh);
 
         if (optionalKhachHang.isPresent()) {
             KhachHang kh = optionalKhachHang.get();
 
-            // Cập nhật tổng chi tiêu
-            BigDecimal currentTotal = kh.getTongChiTieuLuyKe() != null ? kh.getTongChiTieuLuyKe() : BigDecimal.ZERO;
+            // 3. Tính toán tổng chi tiêu mới
+            BigDecimal currentTotal = kh.getTongChiTieuLuyKe() != null
+                    ? kh.getTongChiTieuLuyKe()
+                    : BigDecimal.ZERO;
+
             BigDecimal newTotal = currentTotal.add(amountToAdd);
 
+            // 4. Cập nhật và lưu vào Database
             kh.setTongChiTieuLuyKe(newTotal);
 
-            // Lưu và trả về
-            return khachHangRepository.save(kh); // Việc save này nằm trong @Transactional của InvoiceService
+            // Lưu ý: Việc lưu này sẽ kích hoạt cơ chế Dirty Checking của JPA
+            return khachHangRepository.save(kh);
         }
-        // Trả về null hoặc ném lỗi nếu khách hàng không tồn tại
+
+        // Trả về null nếu không tìm thấy khách hàng
         return null;
     }
 
