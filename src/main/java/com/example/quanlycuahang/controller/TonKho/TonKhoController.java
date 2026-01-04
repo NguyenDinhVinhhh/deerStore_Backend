@@ -26,7 +26,7 @@ public class TonKhoController {
         this.tonKhoService = tonKhoService;
     }
 
-    //api thiết lập tồn kho ban đầu
+
     // API thiết lập tồn kho ban đầu
     @PostMapping
     public ResponseEntity<?> initInventory(

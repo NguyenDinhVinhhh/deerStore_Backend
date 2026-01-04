@@ -12,8 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 
-// Import từ jakarta.persistence.* nếu bạn dùng Spring Boot 3+
-// import jakarta.persistence.*;
+
 
 @Entity
 @Table(name = "tai_khoan_khach_hang")

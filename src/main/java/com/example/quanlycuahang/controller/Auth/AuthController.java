@@ -6,8 +6,10 @@ import com.example.quanlycuahang.entity.TaiKhoan.TaiKhoan;
 import com.example.quanlycuahang.service.Auth.AuthService;
 import com.example.quanlycuahang.service.ChiNhanh.BranchService;
 import com.example.quanlycuahang.util.JwtUtil;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,7 +27,6 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    // ✅ Thống nhất dùng JwtUtil để tạo Token có chứa quyền (authorities)
     @Autowired
     private JwtUtil jwtUtils;
 
@@ -35,15 +36,15 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    // api đăng nhập
     @PostMapping("/login")
     public ResponseEntity<?> authenticate(@RequestBody LoginRequest request) {
         try {
-            // 1. Xác thực bằng AuthenticationManager (Spring sẽ nạp quyền từ Database vào đây)
+
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getTenDangNhap(), request.getMatKhau())
             );
 
-            // 2. Dùng JwtUtil để tạo Token. Hàm này sẽ lấy danh sách quyền từ object authentication
             String jwtToken = jwtUtils.generateJwtToken(authentication);
 
             TaiKhoan taiKhoan = (TaiKhoan) authentication.getPrincipal();
@@ -64,6 +65,7 @@ public class AuthController {
         }
     }
 
+    // api dăng kí
     @PostMapping("/register/staff")
     public ResponseEntity<?> registerStaff(@RequestBody StaffRegisterRequest request) {
         try {
@@ -87,16 +89,19 @@ public class AuthController {
         }
     }
 
+    // api lấy tất cả nhân viên
     @GetMapping("/tai-khoan")
     public ResponseEntity<List<TaiKhoanDto>> getAllTaiKhoan() {
         List<TaiKhoanDto> taiKhoanList = authService.getAllTaiKhoanDto();
         return ResponseEntity.ok(taiKhoanList);
     }
 
+    // api cập nhật nhân viên
     @PutMapping("/tai-khoan/{maTk}")
+    @PreAuthorize("hasAuthority('SUA_NHAN_VIEN')")
     public ResponseEntity<?> updateTaiKhoan(
             @PathVariable Integer maTk,
-            @RequestBody UpdateTaiKhoanRequest request
+            @Valid @RequestBody UpdateTaiKhoanRequest request
     ) {
         try {
             authService.updateTaiKhoan(maTk, request);
@@ -106,6 +111,7 @@ public class AuthController {
         }
     }
 
+    // api tìm nhân viên
     @GetMapping("/tai-khoan/search")
     public ResponseEntity<List<TaiKhoanDto>> searchTaiKhoan(@RequestParam String hoTen) {
         List<TaiKhoanDto> result = authService.searchTaiKhoanByHoTen(hoTen);

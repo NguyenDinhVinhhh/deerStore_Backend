@@ -1,7 +1,10 @@
 package com.example.quanlycuahang.controller.thongke;
 
+import com.example.quanlycuahang.dto.HoaDon.TopSanPham;
 import com.example.quanlycuahang.dto.HoaDon.TopSanPhamDTO;
+import com.example.quanlycuahang.dto.ThongKe.ThoiGianThongKe;
 import com.example.quanlycuahang.service.BAOCAO.BaoCaoBanHangService;
+import com.example.quanlycuahang.service.HoaDon.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +23,8 @@ public class BaoCaoBanHangController {
     @Autowired
     private BaoCaoBanHangService baoCaoBanHangService;
 
+    @Autowired
+    private InvoiceService invoiceService;
     /**
      * 📊 API Top sản phẩm bán chạy
      *
@@ -48,4 +53,6 @@ public class BaoCaoBanHangController {
 
         return ResponseEntity.ok(response);
     }
+
+
 }

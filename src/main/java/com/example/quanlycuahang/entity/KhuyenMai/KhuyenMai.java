@@ -41,11 +41,11 @@ public class KhuyenMai {
     @Column(name = "trang_thai", columnDefinition = "TINYINT default 1")
     private Integer trangThai;
 
-    // 💡 TRƯỜNG MỚI 1: Min Order Value (Điều kiện áp dụng số tiền tối thiểu)
+
     @Column(name = "gia_tri_don_hang_toi_thieu", precision = 18, scale = 0)
     private BigDecimal giaTriDonHangToiThieu;
 
-    // 💡 TRƯỜNG MỚI 2: Max Cap (Giới hạn tiền giảm tối đa)
+
     @Column(name = "gioi_han_tien_giam_toi_da", precision = 18, scale = 0)
     private BigDecimal gioiHanTienGiamToiDa;
 

@@ -24,7 +24,7 @@ public class Quyen {
         this.moTa = moTa;
     }
 
-    // Getter & Setter
+
     public Integer getMaQuyen() {
         return maQuyen;
     }

@@ -87,6 +87,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/san-pham/**", "/api/danh-muc/**","/api/chi-nhanh/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
                         .requestMatchers("/api/momo/**").permitAll()
+                        .requestMatchers("/api/bao-cao/**").permitAll()
 
 
                         // các api đóng
@@ -101,7 +102,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/kho-hang/**").authenticated()
                         .requestMatchers("/api/invoices/**").authenticated()
                         .requestMatchers("/api/san-pham/**").authenticated()
-                        .requestMatchers("/api/lich-su-mua-hang/**").authenticated()
+
 
 
                         //Tất cả các request còn lại cũng phải đăng nhập

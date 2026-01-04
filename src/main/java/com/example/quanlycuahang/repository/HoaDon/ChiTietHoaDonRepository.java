@@ -1,5 +1,6 @@
 package com.example.quanlycuahang.repository.HoaDon;
 
+import com.example.quanlycuahang.dto.HoaDon.TopSanPham;
 import com.example.quanlycuahang.dto.HoaDon.TopSanPhamDTO;
 import com.example.quanlycuahang.entity.HoaDon.ChiTietHoaDon;
 import org.springframework.data.domain.Pageable;
@@ -107,6 +108,7 @@ public interface ChiTietHoaDonRepository extends JpaRepository<ChiTietHoaDon, In
     WHERE c.ma_hd = :maHd
 """)
     List<ChiTietHoaDon> findByHoaDon(@Param("maHd") Integer maHd);
+
 
 
 

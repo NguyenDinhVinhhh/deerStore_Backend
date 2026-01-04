@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface TaiKhoanChiNhanhRepository extends JpaRepository<TaiKhoanChiNhanh, TaiKhoanChiNhanh.TaiKhoanChiNhanhId> {
 
-    // Hàm custom: Lấy tất cả liên kết chi nhánh dựa trên Mã Tài khoản
+
     List<TaiKhoanChiNhanh> findByMaTk(Integer maTk);
 
     void deleteByMaTk(Integer maTk);

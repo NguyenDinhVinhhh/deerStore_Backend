@@ -8,15 +8,15 @@ public class LichSuMuaHangResponse {
 
     private Integer maHoaDon;
     private LocalDateTime ngayMua;
-    private BigDecimal tongTienGoc; // Cột tong_tien trong DB
-    private BigDecimal giamGia;     // Cột giam_gia trong DB
-    private BigDecimal thanhTien;   // Cột thanh_tien thực tế khách trả
+    private BigDecimal tongTienGoc;
+    private BigDecimal giamGia;
+    private BigDecimal thanhTien;
     private List<ChiTietHoaDonResponse> chiTiet;
 
     public LichSuMuaHangResponse() {
     }
 
-    // ===== GETTERS / SETTERS =====
+
 
     public Integer getMaHoaDon() { return maHoaDon; }
     public void setMaHoaDon(Integer maHoaDon) { this.maHoaDon = maHoaDon; }

@@ -9,6 +9,7 @@ import com.example.quanlycuahang.entity.ChiNhanh.ChiNhanh;
 import com.example.quanlycuahang.entity.ChiNhanh.TaiKhoanChiNhanh;
 import com.example.quanlycuahang.entity.TaiKhoan.TaiKhoan;
 import com.example.quanlycuahang.entity.VaiTro.VaiTro;
+import com.example.quanlycuahang.exception.ResourceNotFoundException;
 import com.example.quanlycuahang.repository.ChiNhanh.ChiNhanhRepository;
 import com.example.quanlycuahang.repository.ChiNhanh.TaiKhoanChiNhanhRepository;
 import com.example.quanlycuahang.repository.TaiKhoan.TaiKhoanRepository;
@@ -120,7 +121,7 @@ public class AuthService {
 
     public TaiKhoan updateTaiKhoan(Integer maTk, UpdateTaiKhoanRequest request) {
         TaiKhoan existingTk = taiKhoanRepository.findById(maTk)
-                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tài khoản không tồn tại"));
 
         existingTk.setHoTen(request.getHoTen());
         existingTk.setEmail(request.getEmail());

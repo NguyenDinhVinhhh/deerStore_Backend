@@ -25,6 +25,4 @@ public class MomoConfig {
 
     @Value("${momo.ipnUrl}")
     private String ipnUrl;
-
-    // Các getters (sẽ tự động tạo nếu dùng Lombok @Getter)
 }

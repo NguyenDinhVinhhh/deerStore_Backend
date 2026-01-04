@@ -20,7 +20,6 @@ public class BaoCaoTonKhoDTO {
     public BaoCaoTonKhoDTO(Object[] result) {
         this.maId = (Integer) result[0];
         this.tongSoLuongTon = (Long) result[1];
-        // Lưu ý: Trường 'ten' sẽ cần được bổ sung sau khi lấy tên từ Repository khác (ví dụ: DanhMucRepository/SanPhamRepository)
         this.ten = "Tên chưa được tìm kiếm";
     }
 }

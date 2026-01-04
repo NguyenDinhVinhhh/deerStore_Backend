@@ -44,16 +44,13 @@ public class InvoiceController {
     @PostMapping("/create")
     public ResponseEntity<?> createInvoice(@RequestBody InvoiceRequest request) {
         try {
-            // 1. Gọi Service để xử lý tạo hóa đơn, trừ tồn kho và xác định trạng thái
-            // Service trả về Map chứa orderId, status và payUrl (nếu là MoMo)
+
             Map<String, Object> responseData = invoiceService.createInvoice(request);
 
             String status = (String) responseData.get("status");
             String orderId = (String) responseData.get("orderId");
 
             if ("Chờ thanh toán Online".equals(status)) {
-                // 2. Nếu là thanh toán Online (ví dụ: MoMo), trả về payUrl
-                // Logic gọi API MoMo đã được chuyển vào InvoiceService (BƯỚC NÀY KHÔNG CẦN GỌI LẠI MOMO)
 
                 String payUrl = (String) responseData.get("payUrl");
 
@@ -68,9 +65,7 @@ public class InvoiceController {
                         )
                 );
             } else {
-                // 3. Nếu là Tiền mặt/Thẻ/Chuyển khoản (Hoàn thành ngay)
 
-                // Trả về thông báo thành công cho Frontend
                 return new ResponseEntity<>(
                         Map.of(
                                 "orderId", orderId,
@@ -89,19 +84,17 @@ public class InvoiceController {
         }
     }
 
-    //--------------------------------------------------------------------------
-    // 2. API: XỬ LÝ IPN (INSTANT PAYMENT NOTIFICATION) TỪ MO MO
-    // Endpoint bảo mật để xác nhận và hoàn tất giao dịch.
-    //--------------------------------------------------------------------------
 
+
+    //api xử lý ipn trả về của momo
     @PostMapping("/momo/ipn")
     public ResponseEntity<String> handleMomoIpn(@RequestBody String ipnJson) {
 
         try {
-            // Parse JSON
+
             JsonNode ipnData = objectMapper.readTree(ipnJson);
 
-            // ========== DEBUG FULL ==========
+
             System.out.println("===== IPN RAW BODY =====");
             System.out.println(ipnJson);
 
@@ -121,7 +114,7 @@ public class InvoiceController {
             System.out.println(mySignature);
             // ===============================
 
-            // Lấy dữ liệu quan trọng
+
             int resultCode = ipnData.get("resultCode").asInt();
             String orderId = ipnData.get("orderId").asText();
             String transId = ipnData.get("transId").asText();
@@ -133,7 +126,7 @@ public class InvoiceController {
             if (mySignature.equals(momoSignature)) {
 
                 if (resultCode == 0) {
-                    // Giao dịch thành công → cập nhật hóa đơn
+
                     invoiceService.finalizeOnlinePayment(orderId, transId,
                             new BigDecimal(amountLong), phuongThuc);
 

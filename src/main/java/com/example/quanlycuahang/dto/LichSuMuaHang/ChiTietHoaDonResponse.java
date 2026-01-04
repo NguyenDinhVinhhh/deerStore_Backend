@@ -24,7 +24,6 @@ public class ChiTietHoaDonResponse {
         this.thanhTien = thanhTien;
     }
 
-    // ===== GETTERS / SETTERS =====
 
     public String getTenSanPham() {
         return tenSanPham;

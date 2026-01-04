@@ -37,13 +37,6 @@ public class KhoHangController {
     }
 
 
-//    @GetMapping("/{maKho}")
-//    public ResponseEntity<KhoHang> getWarehouseById(@PathVariable Integer maKho) {
-//        return khoHangService.findById(maKho)
-//                .map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
-
 
 
     @PostMapping

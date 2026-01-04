@@ -36,7 +36,7 @@ public class SanPhamController {
 
     // api thêm sản phẩm mới
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    @PreAuthorize("hasAuthority('THEM_SAN_PHAM')")
+    @PreAuthorize("hasAuthority('THEM_SAN_PHAM')")
     public ResponseEntity<?> create(
             @RequestParam("tenSP") String tenSP,
             @RequestParam("maSku") String maSku,
@@ -88,7 +88,7 @@ public class SanPhamController {
 
     // API cập nhật sản phẩm
     @PutMapping(value = "/{id}/thong-tin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    @PreAuthorize("hasAuthority('SUA_SAN_PHAM')")
+    @PreAuthorize("hasAuthority('SUA_SAN_PHAM')")
     public ResponseEntity<SanPhamResponse> updateThongTin(
             @PathVariable Integer id,
             @RequestParam String tenSP,

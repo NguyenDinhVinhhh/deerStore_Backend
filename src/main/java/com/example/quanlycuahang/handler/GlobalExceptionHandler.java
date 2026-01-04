@@ -18,9 +18,7 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Helper method để tạo đối tượng ErrorResponse đồng nhất
-     */
+   // tạo mẫu lỗi chung
     private ErrorResponse buildErrorResponse(HttpStatus status, String message, WebRequest request) {
         return ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
@@ -31,9 +29,7 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
-    /**
-     * 1. Xử lý lỗi Validation (@Valid trên DTO)
-     */
+    // lỗi  valid
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex, WebRequest request) {
@@ -48,9 +44,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * 2. Xử lý lỗi không tìm thấy tài nguyên (404 Not Found)
-     */
+    // lỗi không tìm thấy dữ liẹu
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
@@ -59,9 +53,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
-    /**
-     * 3. Xử lý các lỗi nghiệp vụ (Business & Inventory)
-     */
+    // lỗi nghiệp vụ
     @ExceptionHandler({
             BusinessException.class,
             InventoryAdjustmentException.class,
@@ -74,9 +66,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * 4. Xử lý các lỗi hệ thống không mong đợi (Cái "lưới" cuối cùng)
-     */
+    // lỗi hệ thống
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
         // In lỗi ra màn hình đen (Console) của IntelliJ để bạn đọc
@@ -90,6 +80,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // lỗi trùng
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
             DuplicateResourceException ex, WebRequest request) {

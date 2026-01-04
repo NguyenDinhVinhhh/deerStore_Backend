@@ -16,9 +16,9 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:uploads/images/");
     }
 
-    @Bean //  Đánh dấu phương thức này sẽ tạo ra một đối tượng được quản lý bởi Spring Context
+    @Bean
     public RestTemplate restTemplate() {
-        // Bạn có thể tùy chỉnh RestTemplate ở đây (ví dụ: timeouts, interceptors)
+
         return new RestTemplate();
     }
 

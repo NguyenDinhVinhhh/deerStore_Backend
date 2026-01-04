@@ -31,11 +31,11 @@ public class NhomKhachHang {
     private BigDecimal nguongChiTieuToiThieu;
 
     @Column(name = "gioi_han_tien_giam_toi_da", nullable = false, precision = 18, scale = 0)
-    private BigDecimal gioiHanTienGiamToiDa; // Max Cap theo tiền
+    private BigDecimal gioiHanTienGiamToiDa;
 
-    // ... (Getters và Setters cho các trường hiện có)
 
-    // --- Getters và Setters cho trường mới ---
+
+
     public BigDecimal getGioiHanTienGiamToiDa() {
         return gioiHanTienGiamToiDa;
     }

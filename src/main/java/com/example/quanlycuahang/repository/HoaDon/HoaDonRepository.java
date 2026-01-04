@@ -17,7 +17,7 @@ import java.util.List;
 @Repository
 public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
 
-    // ================== THỐNG KÊ THEO KHÁCH HÀNG ==================
+
 
     /**
      * Đếm tổng số hóa đơn của 1 khách hàng
@@ -34,7 +34,7 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
 
 
 
-    // ================== DASHBOARD HÔM NAY ==================
+
 
     // 1️⃣ Đơn mới hôm nay (theo chi nhánh hoặc tất cả)
     @Query("""

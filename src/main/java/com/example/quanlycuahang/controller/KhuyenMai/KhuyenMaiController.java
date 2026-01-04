@@ -61,12 +61,4 @@ public class KhuyenMaiController {
     }
 
 
-
-//   // api lấy thông tin khuyến mãi theo mã đang thừa chưa dùng
-//    @GetMapping("/kiem-tra-code")
-//    public ResponseEntity<KhuyenMai> checkKhuyenMaiCode(@RequestParam String maCode) {
-//        return khuyenMaiService.getValidKhuyenMaiByCode(maCode)
-//                .map(ResponseEntity::ok)
-//                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-//    }
 }
